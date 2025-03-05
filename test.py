@@ -1,4 +1,4 @@
-import asyncio
+
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
@@ -39,9 +39,9 @@ async def update_invite_link():
             except Exception as e:
                 await send_log(f"Error revoking links: {e}")
 
-        # Create a new invite link (valid for 10 minutes)
+        # Create a new invite link (valid for 1minutes)
         try:
-            invite = await app.create_chat_invite_link(GROUP_ID, expire_date=datetime.utcnow() + timedelta(minutes=10))
+            invite = await app.create_chat_invite_link(GROUP_ID, expire_date=datetime.utcnow() + timedelta(minutes=1))
             current_invite_link = invite.invite_link
             await send_log(f"New invite link created: {current_invite_link}")
         except Exception as e:
@@ -57,7 +57,7 @@ async def update_invite_link():
         except Exception as e:
             await send_log(f"Error updating inline button: {e}")
 
-        await asyncio.sleep(600)  # Wait 10 minutes before regenerating
+        await asyncio.sleep(60)  # Wait 1 minutes before regenerating
 
 @app.on_message(filters.new_chat_members)
 async def on_new_member(_, message):
@@ -75,4 +75,11 @@ async def main():
     await asyncio.Event().wait()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    try:
+        loop.create_task(update_invite_link())  # Invite link updater as a task
+        app.run()  # Pyrogram bot run without `asyncio.run()`
+    except KeyboardInterrupt:
+        print("Bot Stopped!")
+    finally:
+        loop.close()
