@@ -12,7 +12,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Bot credentials
-API_TOKEN = "8151182853:AAHqUBS6FsI0KJQfDv3_yFWGIwbDYMz33BE"
+API_TOKEN = "8151182853:AAGweMO0CZkaFMZxzYRVoxoC5pbAJHtlXBs"
 
 # Configuration
 CHANNEL_ID_1 = -1002033219914  # Channel where invite is generated
