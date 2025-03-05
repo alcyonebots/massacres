@@ -1,8 +1,7 @@
 import logging
-import asyncio
 from datetime import datetime, timedelta
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton, Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, CallbackContext, Filters
 from telegram.error import TelegramError
 
 # Enable logging
@@ -23,6 +22,7 @@ ADMIN_IDS = [6663845789, 1110013191]  # List of admin IDs
 current_invite_link = None
 invite_expiry = 10  # Default expiry time in minutes
 
+
 def send_log(context: CallbackContext, text: str):
     """Send logs to all admins."""
     for admin_id in ADMIN_IDS:
@@ -31,19 +31,20 @@ def send_log(context: CallbackContext, text: str):
         except TelegramError as e:
             logger.error(f"Error sending log to {admin_id}: {e}")
 
+
 def generate_invite_link(context: CallbackContext):
     """Generates a new invite link and updates the button."""
     global current_invite_link
 
     try:
         # Revoke all existing invite links
-        links = context.bot.get_chat_invite_links(CHANNEL_ID_1)
+        links = context.bot.get_chat_invite_links(CHANNEL_ID_1, invite_link=True)
         for link in links:
             if not link.is_revoked:
                 context.bot.revoke_chat_invite_link(CHANNEL_ID_1, link.invite_link)
                 send_log(context, f"**[Revoked]** Invite link: `{link.invite_link}`")
 
-        # Create a new invite link with the set expiration time
+        # Create a new invite link
         expire_date = datetime.utcnow() + timedelta(minutes=invite_expiry)
         invite = context.bot.create_chat_invite_link(CHANNEL_ID_1, expire_date=expire_date)
         current_invite_link = invite.invite_link
@@ -57,7 +58,8 @@ def generate_invite_link(context: CallbackContext):
     except TelegramError as e:
         send_log(context, f"**[Error]** Updating invite link: `{e}`")
 
-def set_expiry_time(update, context):
+
+def set_expiry_time(update: Update, context: CallbackContext):
     """Allows admins to set the invite link expiry time dynamically."""
     global invite_expiry
     user_id = update.message.from_user.id
@@ -83,7 +85,7 @@ def set_expiry_time(update, context):
             return
 
         update.message.reply_text(f"**Invite link expiry set to {invite_expiry} minutes.**", parse_mode="Markdown")
-        send_log(context, f"**[Config]** Admin {update.message.from_user.mention} set expiry to **{invite_expiry} minutes.**")
+        send_log(context, f"**[Config]** Admin [{update.message.from_user.full_name}](tg://user?id={user_id}) set expiry to **{invite_expiry} minutes.**")
 
         generate_invite_link(context)  # Generate a new link immediately after changing expiry
 
@@ -91,13 +93,15 @@ def set_expiry_time(update, context):
         update.message.reply_text("**Error processing your request.**", parse_mode="Markdown")
         send_log(context, f"**[Error]** Setting expiry time: `{e}`")
 
-def on_new_member(update, context):
+
+def on_new_member(update: Update, context: CallbackContext):
     """Resets the invite link when a new user joins."""
     new_members = update.message.new_chat_members
     if new_members:
         for member in new_members:
-            send_log(context, f"**[User Joined]** {member.mention_markdown()}")
+            send_log(context, f"**[User Joined]** [{member.full_name}](tg://user?id={member.id})")
         generate_invite_link(context)  # Generate a new link when someone joins
+
 
 def main():
     updater = Updater(API_TOKEN, use_context=True)
@@ -107,11 +111,12 @@ def main():
     dp.add_handler(CommandHandler("set", set_expiry_time, pass_args=True))
 
     # Member join handler
-    dp.add_handler(CommandHandler("member_join", on_new_member))
+    dp.add_handler(MessageHandler(Filters.status_update.new_chat_members, on_new_member))
 
     # Start the bot
     updater.start_polling()
     updater.idle()
+
 
 if __name__ == "__main__":
     main()
