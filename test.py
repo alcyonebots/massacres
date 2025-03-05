@@ -4,8 +4,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 
 # API credentials
-api_id = 28561722
-api_hash = "a538ba07656f746def99bed7032121cc"
+api_id = 22878444
+api_hash = "550641aa3600a98c1cb94afc259f2244"
 bot_token = "8151182853:AAGweMO0CZkaFMZxzYRVoxoC5pbAJHtlXBs"
 
 app = Client("auto_invite_revoke", api_id, api_hash, bot_token=bot_token)
