@@ -8,7 +8,7 @@ api_id = 22878444
 api_hash = "550641aa3600a98c1cb94afc259f2244"
 bot_token = "8151182853:AAGweMO0CZkaFMZxzYRVoxoC5pbAJHtlXBs"
 
-app = Client("auto_invite_revoke", api_id, api_hash, bot_token=bot_token)
+app = Client("massacres", api_id, api_hash, bot_token=bot_token)
 
 # Configuration
 GROUP_ID = -1002033219914  # Your private group ID
